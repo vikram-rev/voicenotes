@@ -1,10 +1,10 @@
 <?php
 return [
     'rev' => [
-      'token' => '<TOKEN>',
-      'callback' => '<CALLBACK-PREFIX>/hook',
+      'token' => '<REVAI_ACCESS_TOKEN>',
+      'callback' => '<CALLBACK_PREFIX>/hook',
     ],
     'mongo' => [
-      'uri' => '<MONGODB-URI>'
+      'uri' => '<MONGODB_URI>'
     ]
 ];

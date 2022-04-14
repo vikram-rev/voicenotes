@@ -1,25 +1,31 @@
 version: '3'
 services:
     app:
-        image: myapp
+        image: voicenotes:latest
+        container_name: voicenotes_app
         ports:
             - 80:80
-        working_dir: /var/www/
         volumes:
-            - ./:/var/www
-            - ./.docker/apache/myapp.conf:/etc/apache2/sites-enabled/000-default.conf
+            - ./:/var/www/
+        working_dir: /var/www/
         links:
             - db
         build:
             context: .
             dockerfile: .docker/php/Dockerfile.dev
+        environment:
+          REVAI_ACCESS_TOKEN: mytoken
+          CALLBACK_PREFIX: http://example.com
+          MONGODB_URI: mongodb://myuser:mypassword@db/
+        entrypoint: ["/var/www/.docker/php/entrypoint.sh"]
+        command: ["apache2-foreground"]
     db:
         image: mongo:latest
+        container_name: voicenotes_db
         restart: always
         environment:
           MONGO_INITDB_ROOT_USERNAME: myuser
           MONGO_INITDB_ROOT_PASSWORD: mypassword
-          MONGO_INITDB_DATABASE: mydb
         volumes:
             - data:/data/db/
         ports:
