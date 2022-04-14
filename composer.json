@@ -5,8 +5,7 @@
         "slim/psr7": "^1.5",
         "php-di/php-di": "^6.3",
         "guzzlehttp/guzzle": "^7.0",
-        "mongodb/mongodb": "^1.5",
-        "ramsey/uuid": "^4.2"
+        "mongodb/mongodb": "^1.5"
     },
     "require-dev": {
       "squizlabs/php_codesniffer": "3.*"

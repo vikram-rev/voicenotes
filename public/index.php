@@ -10,7 +10,7 @@ use Slim\Routing\RouteContext;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7;
 use DI\ContainerBuilder;
-use Ramsey\Uuid\Uuid;
+use MongoDB\BSON\ObjectID;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -95,10 +95,8 @@ $app->post(
     function (Request $request, Response $response) {
         $mongoClient = $this->get('mongo');
         try {
-            $uuid = Uuid::uuid4();
-            $mongoClient->mydb->notes->insertOne(
+            $insertResult = $mongoClient->mydb->notes->insertOne(
                 [
-                    '_id'    => $uuid->toString(),
                     'status' => 'JOB_RECORDED',
                     'ts'     => time(),
                     'jid'    => false,
@@ -106,6 +104,7 @@ $app->post(
                     'data'   => false,
                 ]
             );
+            $id = (string)$insertResult->getInsertedId();
 
             $uploadedFiles = $request->getUploadedFiles();
             // handle single input with single file upload
@@ -114,7 +113,7 @@ $app->post(
             if ($uploadedFile->getError() === UPLOAD_ERR_OK) {
                 $mongoClient->mydb->notes->updateOne(
                     [
-                        '_id' => $uuid->toString(),
+                        '_id' => new ObjectID($id),
                     ],
                     [
                         '$set' => ['status' => 'JOB_UPLOADED'],
@@ -134,7 +133,7 @@ $app->post(
                                 'name'     => 'options',
                                 'contents' => json_encode(
                                     [
-                                        'metadata'         => $uuid->toString(),
+                                        'metadata'         => $id,
                                         'callback_url'     => $this->get('settings')['rev']['callback'],
                                         'skip_diarization' => 'true',
                                     ]
@@ -147,7 +146,7 @@ $app->post(
 
                 $mongoClient->mydb->notes->updateOne(
                     [
-                        '_id' => $uuid->toString(),
+                        '_id' => new ObjectID($id)
                     ],
                     [
                         '$set' => [
@@ -162,7 +161,7 @@ $app->post(
         } catch (\GuzzleHttp\Exception\RequestException $e) {
             $mongoClient->mydb->notes->updateOne(
                 [
-                    '_id' => $uuid->toString(),
+                    '_id' => new ObjectID($id)
                 ],
                 [
                     '$set' => [
@@ -182,18 +181,42 @@ $app->post(
                 )
             );
             return $response->withHeader('Content-Type', 'application/vnd.api+json')->withStatus($e->getResponse()->getStatusCode());
-        }//end try
+        } catch (\Exception $e) {
+          $mongoClient->mydb->notes->updateOne(
+              [
+                  '_id' => new ObjectID($id)
+              ],
+              [
+                  '$set' => [
+                      'status' => 'JOB_TRANSCRIPTION_FAILURE',
+                      'error'  => $e->getMessage(),
+                  ],
+              ]
+          );
+          $response->getBody()->write(
+              json_encode(
+                  [
+                      'error' => [
+                          'detail' => $e->getMessage(),
+                          'status' => 500,
+                      ],
+                  ]
+              )
+          );
+          return $response->withHeader('Content-Type', 'application/vnd.api+json')->withStatus(500);
+      }
+
     }
 );
 
 $app->get(
-    '/delete/{uuid}',
+    '/delete/{id}',
     function (Request $request, Response $response, $args) {
-        $uuid        = filter_var($args['uuid'], FILTER_SANITIZE_STRING);
+        $id        = filter_var($args['id'], FILTER_SANITIZE_STRING);
         $mongoClient = $this->get('mongo');
         $mongoClient->mydb->notes->deleteOne(
             [
-                '_id' => $uuid
+                '_id' => new ObjectID($id)
             ]
         );
         return $response->withHeader('Location', '/index/success-deleted')->withStatus(200);
@@ -210,7 +233,7 @@ $app->post(
         if ($json->job->status === 'transcribed') {
             $mongoClient->mydb->notes->updateOne(
                 [
-                    '_id' => $id
+                    '_id' => new ObjectID($id)
                 ],
                 [
                     '$set' => ['status' => 'JOB_TRANSCRIPTION_SUCCESS'],
@@ -227,7 +250,7 @@ $app->post(
             $transcript  = explode('    ', $revResponse){2};
             $mongoClient->mydb->notes->updateOne(
                 [
-                    '_id' => $id
+                    '_id' => new ObjectID($id)
                 ],
                 [
                     '$set' => ['data' => $transcript],
@@ -236,7 +259,7 @@ $app->post(
         } else {
             $mongoClient->mydb->notes->updateOne(
                 [
-                    '_id' => $id
+                    '_id' => new ObjectID($id)
                 ],
                 [
                     '$set' => [
@@ -245,7 +268,7 @@ $app->post(
                     ],
                 ]
             );
-        }//end if
+        }
 
         return $response->withStatus(200);
     }

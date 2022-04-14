@@ -10,7 +10,6 @@
   </div>
   <h4 class="justify-content-center timer" style="text-align:center"></h4>
 
-
   <script src="https://cdnjs.cloudflare.com/ajax/libs/RecordRTC/5.5.6/RecordRTC.js"></script>
 
   <script>
@@ -53,6 +52,7 @@
 
     stopAndProcessRecording = function() {
       control.disabled = true;
+      timer.innerText = 'Please wait, uploading...';
       recorder.stopRecording(function() {
         const blob = recorder.getBlob();
         const formData = new FormData();
