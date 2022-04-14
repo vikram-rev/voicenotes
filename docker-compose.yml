@@ -12,9 +12,9 @@ services:
             context: .
             dockerfile: .docker/php/Dockerfile
         environment:
-          REVAI_ACCESS_TOKEN: mytoken
-          CALLBACK_PREFIX: http://example.com
-          MONGODB_URI: mongodb://myuser:mypassword@db/
+          - REVAI_ACCESS_TOKEN
+          - CALLBACK_PREFIX
+          - MONGODB_URI
         entrypoint: ["/var/www/.docker/php/entrypoint.sh"]
         command: ["apache2-foreground"]
     db:
