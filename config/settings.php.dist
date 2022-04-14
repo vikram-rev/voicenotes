@@ -1,0 +1,10 @@
+<?php
+return [
+    'rev' => [
+      'token' => '<TOKEN>',
+      'callback' => '<CALLBACK-PREFIX>/hook',
+    ],
+    'mongo' => [
+      'uri' => '<MONGODB-URI>'
+    ]
+];
