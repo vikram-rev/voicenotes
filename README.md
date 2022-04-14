@@ -2,7 +2,7 @@
 
 ## Get started
 
-1. Obtain the callback URL. It should be entered in place of YOURCALLBACKPREFIX below. If you are using locally, set up ngrok (`ngrok http 80`) and use the callback URL for the ngrok tunnel.
+1. Obtain the callback URL. It should be entered in place of YOURCALLBACKPREFIX below. If you are operating locally, set up ngrok (`ngrok http 80`) and use the ngrok callback URL.
 2. Obtain a Rev AI access token. It should be entered in place of YOURTOKEN below.
 3. If using an external MongoDB database, replace the default MongoDB credentials below.
 
