@@ -12,17 +12,17 @@ use GuzzleHttp\Psr7;
 use DI\ContainerBuilder;
 use MongoDB\BSON\ObjectID;
 
-require __DIR__.'/../vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
 
 $containerBuilder = new ContainerBuilder();
 
 $containerBuilder->addDefinitions(
     [
         'settings' => function () {
-            return include __DIR__.'/../config/settings.php';
+            return include __DIR__ . '/../config/settings.php';
         },
         'view'     => function () {
-            return Twig::create(__DIR__.'/../views');
+            return Twig::create(__DIR__ . '/../views');
         },
         'mongo'    => function ($c) {
             return new MongoDB\Client($c->get('settings')['mongo']['uri']);
@@ -157,7 +157,7 @@ $app->post(
                 );
                 $response->getBody()->write(json_encode(['data' => ['status' => 'success']]));
                 return $response->withHeader('Content-Type', 'application/vnd.api+json')->withStatus(200);
-            }//end if
+            }
         } catch (\GuzzleHttp\Exception\RequestException $e) {
             $mongoClient->mydb->notes->updateOne(
                 [
@@ -181,29 +181,6 @@ $app->post(
                 )
             );
             return $response->withHeader('Content-Type', 'application/vnd.api+json')->withStatus($e->getResponse()->getStatusCode());
-        } catch (\Exception $e) {
-            $mongoClient->mydb->notes->updateOne(
-                [
-                    '_id' => new ObjectID($id),
-                ],
-                [
-                    '$set' => [
-                        'status' => 'JOB_TRANSCRIPTION_FAILURE',
-                        'error'  => $e->getMessage(),
-                    ],
-                ]
-            );
-            $response->getBody()->write(
-                json_encode(
-                    [
-                        'error' => [
-                            'detail' => $e->getMessage(),
-                            'status' => 500,
-                        ],
-                    ]
-                )
-            );
-            return $response->withHeader('Content-Type', 'application/vnd.api+json')->withStatus(500);
         }
     }
 );
@@ -225,6 +202,7 @@ $app->get(
 $app->post(
     '/hook',
     function (Request $request, Response $response) {
+        // TODO: is try/catch needed here?
         $mongoClient = $this->get('mongo');
         $json        = json_decode($request->getBody());
         $jid         = $json->job->id;
